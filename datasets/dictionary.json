@@ -1,0 +1,63 @@
+[
+  {
+    "word": "apple",
+    "meaning": "A round fruit with red or green skin.",
+    "part_of_speech": "noun",
+    "examples": [
+      "I ate an apple after lunch."
+    ],
+    "synonyms": [
+      "fruit"
+    ]
+  },
+
+  {
+    "word": "banana",
+    "meaning": "A long curved fruit with yellow skin.",
+    "part_of_speech": "noun",
+    "examples": [
+      "Bananas are rich in potassium."
+    ],
+    "synonyms": [
+      "fruit"
+    ]
+  },
+
+  {
+    "word": "cat",
+    "meaning": "A small domesticated carnivorous mammal.",
+    "part_of_speech": "noun",
+    "examples": [
+      "The cat slept on the sofa."
+    ],
+    "synonyms": [
+      "feline",
+      "pet"
+    ]
+  },
+
+  {
+    "word": "dog",
+    "meaning": "A domesticated animal commonly kept as a pet.",
+    "part_of_speech": "noun",
+    "examples": [
+      "The dog barked loudly."
+    ],
+    "synonyms": [
+      "canine",
+      "pet"
+    ]
+  },
+  {
+  "word": "door",
+  "meaning": "A movable barrier used to open and close an entrance.",
+  "part_of_speech": "noun",
+  "examples": [
+      "She opened the door slowly."
+  ],
+  "synonyms": [
+      "gate",
+      "entrance"
+  ]
+  }
+]

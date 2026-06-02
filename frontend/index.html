@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Semantic Dictionary AI</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+
+        <div class="hero-inner">
+
+            <span class="hero-badge">
+                AI · NLP · Graph Search
+            </span>
+
+            <h1 class="hero-title">
+                Semantic Dictionary
+            </h1>
+
+            <p class="hero-subtitle">
+                Explore words through meaning,
+                context, and connection.
+            </p>
+
+        </div>
+
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- SEARCH BAR -->
+        <section class="search-section">
+
+            <div class="search-box">
+
+                <!-- Search Icon -->
+                <svg class="search-icon"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <circle cx="11"
+                            cy="11"
+                            r="8">
+                    </circle>
+
+                    <line x1="21"
+                          y1="21"
+                          x2="16.65"
+                          y2="16.65">
+                    </line>
+
+                </svg>
+
+                <input
+                    type="text"
+                    id="query"
+                    placeholder="Search a word..."
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+
+                <button
+                    id="search-btn"
+                    onclick="searchWord()">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- LOADING -->
+        <div
+            id="loading"
+            class="loading hidden">
+
+            <div class="spinner"></div>
+
+            <span>
+                Thinking...
+            </span>
+
+        </div>
+
+        <!-- ERROR -->
+        <div
+            id="error-message"
+            class="error-message hidden">
+
+            ⚠ Could not connect to backend
+
+        </div>
+
+        <!-- RESULTS -->
+        <section
+            id="results"
+            class="results-section">
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <p>
+            Built with FastAPI · FAISS · Trie · Graph Search
+        </p>
+
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
