@@ -573,6 +573,121 @@ function toggleArchPanel() {
 //   6. Handle errors gracefully
 // =============================================
 
+// =============================================
+// SECTION 12: PIPELINE METRICS PANEL
+// Fetches /metrics after every search and
+// renders an animated latency panel below results.
+//
+// STAGE CONFIG — label + colour class per stage.
+// Order here determines render order in the panel.
+// =============================================
+
+const METRIC_STAGES = [
+    { key: "trie_lookup_ms",         label: "Trie Lookup",        colorClass: "metric-trie"  },
+    { key: "dict_api_ms",            label: "Dictionary API",     colorClass: "metric-dict"  },
+    { key: "autocomplete_ms",        label: "Autocomplete",       colorClass: "metric-trie"  },
+    { key: "fuzzy_search_ms",        label: "Levenshtein Fuzzy",  colorClass: "metric-lev"   },
+    { key: "graph_bfs_ms",           label: "Graph BFS",          colorClass: "metric-graph" },
+    { key: "graph_visualization_ms", label: "Graph Visualizer",   colorClass: "metric-graph" },
+    { key: "faiss_search_ms",        label: "FAISS Search",       colorClass: "metric-faiss" },
+    { key: "gemini_ms",              label: "Gemini AI",          colorClass: "metric-gemini"},
+];
+
+function renderMetricsPanel(metricsData) {
+    // Find or create the metrics container below #results
+    let panel = document.getElementById("metrics-panel");
+    if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "metrics-panel";
+        panel.className = "metrics-panel";
+        const resultsEl = document.getElementById("results");
+        resultsEl.parentNode.insertBefore(panel, resultsEl.nextSibling);
+    }
+
+    // Find the max value to scale the bar widths
+    const values = METRIC_STAGES
+        .map(s => metricsData[s.key])
+        .filter(v => v !== null && v !== undefined);
+    const maxVal = Math.max(...values, 1);
+
+    // Build rows HTML
+    const rowsHTML = METRIC_STAGES.map(function(stage) {
+        const raw = metricsData[stage.key];
+        if (raw === null || raw === undefined) return "";
+
+        const ms      = raw.toFixed(2);
+        const barPct  = Math.max((raw / maxVal) * 100, 1).toFixed(1);
+        const isSlowMs = raw > 200;   // highlight slow stages
+
+        return `
+            <div class="metric-row" data-ms="${raw}">
+                <span class="metric-label">${stage.label}</span>
+                <div class="metric-bar-track">
+                    <div
+                        class="metric-bar ${stage.colorClass}"
+                        style="width: 0%"
+                        data-width="${barPct}%"
+                    ></div>
+                </div>
+                <span class="metric-value ${isSlowMs ? 'metric-value-slow' : ''}">
+                    ${ms} ms
+                </span>
+            </div>
+        `;
+    }).join("");
+
+    // Calculate total
+    const total = values.reduce((a, b) => a + b, 0).toFixed(1);
+
+    panel.innerHTML = `
+        <div class="metrics-header">
+            <div class="metrics-title-row">
+                <span class="metrics-icon">⚡</span>
+                <span class="metrics-title">Pipeline Performance</span>
+                <span class="metrics-subtitle">Last request · measured with perf_counter()</span>
+            </div>
+            <span class="metrics-total">${total} ms total</span>
+        </div>
+        <div class="metrics-body">
+            ${rowsHTML}
+        </div>
+        <div class="metrics-footer">
+            <span class="metrics-note">
+                Each stage independently instrumented · values update on every search
+            </span>
+        </div>
+    `;
+
+    // Fade the panel in
+    panel.classList.remove("metrics-visible");
+    requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+            panel.classList.add("metrics-visible");
+
+            // Animate bars after fade starts
+            setTimeout(function() {
+                panel.querySelectorAll(".metric-bar").forEach(function(bar) {
+                    bar.style.width = bar.dataset.width;
+                });
+            }, 80);
+        });
+    });
+}
+
+
+// =============================================
+// SECTION 11: MAIN SEARCH FUNCTION
+// Called when user clicks Search or presses Enter.
+// Steps:
+//   1. Read query from input
+//   2. Hide empty state, clear results, show loader
+//   3. Fetch from FastAPI backend
+//   4. Parse and render result cards
+//   5. Kick off typewriter animation for AI card
+//   6. Fetch /metrics and render latency panel
+//   7. Handle errors gracefully
+// =============================================
+
 async function searchWord() {
     const query = document.getElementById("query").value.trim();
 
@@ -581,6 +696,8 @@ async function searchWord() {
 
     // Reset UI
     document.getElementById("results").innerHTML = "";
+    const oldMetrics = document.getElementById("metrics-panel");
+    if (oldMetrics) oldMetrics.remove();
     setError(false);
     setLoading(true);
     hideEmptyState();
@@ -617,6 +734,20 @@ async function searchWord() {
                 typewriterEffect(aiText, 18);
             }, 0);
         }
+
+        // Fetch and render pipeline latency metrics
+        // Uses a short delay so the search cards paint first
+        setTimeout(async function () {
+            try {
+                const metricsResp = await fetch("http://127.0.0.1:8000/metrics");
+                if (metricsResp.ok) {
+                    const metricsData = await metricsResp.json();
+                    renderMetricsPanel(metricsData);
+                }
+            } catch (e) {
+                // Metrics are non-critical — silently skip if unavailable
+            }
+        }, 200);
 
     } catch (error) {
         // Backend unreachable or returned an error

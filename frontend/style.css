@@ -1326,3 +1326,172 @@ body {
         transform: rotate(90deg);
     }
 }
+
+/* =============================================
+   PIPELINE METRICS PANEL
+   Appended — matches existing cyber dark theme.
+   Variables reuse existing design tokens.
+============================================= */
+
+/* Container — fades in after results render */
+.metrics-panel {
+    max-width: 860px;
+    margin: 32px auto 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-mid);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    box-shadow: var(--shadow-card);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.metrics-panel.metrics-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Header row */
+.metrics-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.metrics-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.metrics-icon {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.metrics-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+
+.metrics-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+
+.metrics-total {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Body — stack of rows */
+.metrics-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Individual metric row */
+.metric-row {
+    display: grid;
+    grid-template-columns: 160px 1fr 90px;
+    align-items: center;
+    gap: 14px;
+}
+
+.metric-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* Bar track — the grey background rail */
+.metric-bar-track {
+    height: 6px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+/* Animated fill bar */
+.metric-bar {
+    height: 100%;
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Per-algorithm bar colours — reuse badge palette */
+.metric-trie   { background: #4facfe; }
+.metric-lev    { background: #fcb64d; }
+.metric-faiss  { background: #a769ff; }
+.metric-graph  { background: #00e5b8; }
+.metric-dict   { background: #ff6482; }
+.metric-gemini {
+    background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+}
+
+/* Value label */
+.metric-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+/* Slow stages (>200ms) highlighted */
+.metric-value-slow {
+    color: #fcb64d;
+}
+
+/* Footer note */
+.metrics-footer {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+.metrics-note {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+
+/* Responsive: stack label above bar on narrow screens */
+@media (max-width: 560px) {
+    .metric-row {
+        grid-template-columns: 1fr 70px;
+        grid-template-rows: auto auto;
+    }
+    .metric-label {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .metric-bar-track {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    .metric-value {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        align-self: center;
+    }
+}

@@ -1,118 +1,108 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.faiss_search import semantic_search_faiss
 from backend.search_engine import intelligent_search, trie, graph
 from backend.fuzzy_search import find_closest_words, load_vocabulary
 from backend.dictionary_api import get_word_data
+import backend.metrics as metrics
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["http://localhost:5500", "http://127.0.0.1:5500",
+                   "http://localhost:3000", "null"],
+    allow_credentials=False,
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
-# Load vocabulary
+
 vocabulary = load_vocabulary("datasets/words.txt~")
-# HOME ROUTE
+
+# ── existing routes (all preserved) ──────────────────────────────────────────
+
 @app.get("/")
 def home():
-    return {
-        "message": "Semantic Dictionary AI Backend Running"
-    }
+    return {"message": "Semantic Dictionary AI Backend Running"}
 
-# MAIN SEARCH ENGINE
+
 @app.get("/search")
 def search(query: str):
-    result = intelligent_search(query)
-    return result
+    return intelligent_search(query)
 
-# AUTOCOMPLETE API
+
 @app.get("/autocomplete")
 def autocomplete(prefix: str):
-    suggestions = trie.autocomplete(prefix)
-    return {
-        "suggestions": suggestions
-    }
+    return {"suggestions": trie.autocomplete(prefix)}
 
-# FUZZY SEARCH API
+
 @app.get("/fuzzy")
 def fuzzy(query: str):
-    matches = find_closest_words(query, vocabulary)
-    return {
-        "matches": matches
-    }
+    return {"matches": find_closest_words(query, vocabulary)}
 
-# GRAPH RELATED WORDS API
+
 @app.get("/graph/related")
 def related_words(word: str):
-    related = graph.bfs_related_words(word)
-    return {
-        "related_words": related
-    }
+    return {"related_words": graph.bfs_related_words(word)}
 
-# WORD METADATA API
+
 @app.get("/word/{word}")
 def word_info(word: str):
     data = get_word_data(word)
-    if data:
-        return data
-    return {
-        "error": "Word not found"
-    }
+    return data if data else {"error": "Word not found"}
 
-# HEALTH CHECK API
+
 @app.get("/health")
 def health():
-    return {
-        "status": "healthy"
-    }
+    return {"status": "healthy"}
+
 
 @app.get("/graph/path")
 def graph_path(start: str, end: str):
-    path = graph.find_path(start, end)
-    return {
-        "path": path
-    }
+    return {"path": graph.find_path(start, end)}
 
 
 @app.get("/graph/depth")
 def graph_depth(word: str, depth: int):
-    related = graph.bfs_related_words_depth(
-        word,
-        depth
-    )
-    return {
-        "related_words": related
-    }
+    return {"related_words": graph.bfs_related_words_depth(word, depth)}
 
-import time
 
 @app.get("/semantic")
 def semantic(query: str):
     start = time.time()
     results = semantic_search_faiss(query)
-    print(
-        "API Time:",
-        time.time() - start
-    )
-    return {
-        "results": results
-    }
+    print("API Time:", time.time() - start)
+    return {"results": results}
 
-@app.get(
-    "/graph/explore"
-)
-def explore(
-    word: str,
-    depth: int = 3
-):
 
-    return {
-        "results":
-        graph.bfs_related_words_depth(
-            word,
-            depth
-        )
+@app.get("/graph/explore")
+def explore(word: str, depth: int = 3):
+    return {"results": graph.bfs_related_words_depth(word, depth)}
+
+
+# ── NEW: metrics endpoint ─────────────────────────────────────────────────────
+
+@app.get("/metrics")
+def get_metrics():
+    """
+    Returns the measured latency (ms) of each pipeline stage
+    from the most recent /search call.
+    Values are null until /search has been called at least once.
+
+    Example response:
+    {
+        "trie_lookup_ms":         0.08,
+        "dict_api_ms":          143.52,
+        "autocomplete_ms":        0.12,
+        "fuzzy_search_ms":       21.84,
+        "graph_bfs_ms":           1.42,
+        "graph_visualization_ms": 0.31,
+        "faiss_search_ms":        4.31,
+        "gemini_ms":            682.54
     }
+    """
+    return metrics.last_latency

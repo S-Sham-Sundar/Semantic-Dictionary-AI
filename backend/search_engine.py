@@ -51,6 +51,24 @@ def simplify_dictionary(data):
     }
 
 
+def build_graph_visualization(query):
+    nodes = [{"id": query}]
+    edges = []
+
+    if query not in graph.graph:
+        return {"nodes": nodes, "edges": edges}
+
+    for neighbor, weight in graph.graph[query]:
+        nodes.append({"id": neighbor})
+        edges.append({
+            "source": query,
+            "target": neighbor,
+            "weight": round(weight, 2),
+        })
+
+    return {"nodes": nodes, "edges": edges}
+
+
 # ── main pipeline ─────────────────────────────────────────────────────────────
 
 def intelligent_search(query: str) -> dict:
@@ -83,10 +101,8 @@ def intelligent_search(query: str) -> dict:
     result["graph"] = graph_results[:20]
     metrics.last_latency["graph_bfs_ms"] = _ms(t)
 
-    # 6. Graph visualization
-    t = time.perf_counter()
+    # 6. Graph visualization (BFS already done, just formatting)
     result["graph_visualization"] = graph.get_visualization_data(query, 2)
-    metrics.last_latency["graph_visualization_ms"] = _ms(t)
 
     # 7. FAISS semantic search
     t = time.perf_counter()
@@ -96,13 +112,13 @@ def intelligent_search(query: str) -> dict:
 
     # 8. Gemini AI explanation
     t = time.perf_counter()
-    try:
-        definition = ""
-        if result["dictionary"]:
-            definition = result["dictionary"]["definition"]
-        result["ai_explanation"] = generate_explanation(query,definition,result["semantic"][:5],result["graph"][:10],)
-    except Exception:
-        result["ai_explanation"] = ("AI explanation temporarily unavailable.")
+    definition = result["dictionary"]["definition"] if result["dictionary"] else ""
+    result["ai_explanation"] = generate_explanation(
+        query,
+        definition,
+        result["semantic"][:5],
+        result["graph"][:10],
+    )
     metrics.last_latency["gemini_ms"] = _ms(t)
 
     return result
