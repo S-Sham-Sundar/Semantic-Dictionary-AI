@@ -4,136 +4,342 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Semantic Dictionary AI</title>
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Syne (display) + DM Sans (body) + Space Mono (mono/badges) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-
-    <link rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossorigin>
-
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap"
-          rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <!-- HERO SECTION -->
+    <!-- =============================================
+         MODAL OVERLAY
+         Shared overlay for all info popups.
+         Hidden by default. JS toggles .visible on it.
+    ============================================= -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+
+    <!-- =============================================
+         HERO SECTION
+         Contains: badge row showing all algorithms,
+         title, subtitle, and the tech stack strip.
+    ============================================= -->
     <header class="hero">
+
+        <!-- Subtle animated grid background (CSS only) -->
+        <div class="hero-grid-bg" aria-hidden="true"></div>
 
         <div class="hero-inner">
 
-            <span class="hero-badge">
-                AI · NLP · Graph Search
-            </span>
+            <!-- Top badge: project category -->
+            <div class="hero-eyebrow">
+                <span class="eyebrow-dot"></span>
+                Unified AI Search Engine
+            </div>
 
             <h1 class="hero-title">
-                Semantic Dictionary
+                Semantic<br>Dictionary
+                <span class="hero-title-accent">AI</span>
             </h1>
 
             <p class="hero-subtitle">
-                Explore words through meaning,
-                context, and connection.
+                Search. Retrieve. Explain. — Six algorithms + Generative AI,
+                unified in a single query.
             </p>
+
+            <!-- Tech pill strip — lists every major component (now includes Gemini) -->
+            <div class="tech-strip">
+                <span class="tech-pill">Trie</span>
+                <span class="tech-divider">·</span>
+                <span class="tech-pill">Levenshtein</span>
+                <span class="tech-divider">·</span>
+                <span class="tech-pill">FAISS</span>
+                <span class="tech-divider">·</span>
+                <span class="tech-pill">BFS Graph</span>
+                <span class="tech-divider">·</span>
+                <span class="tech-pill">FastAPI</span>
+                <span class="tech-divider">·</span>
+                <span class="tech-pill">NLP</span>
+                <span class="tech-divider">·</span>
+                <!-- NEW: Gemini pill — highlighted in the AI accent colour -->
+                <span class="tech-pill tech-pill-ai">Gemini 2.5 Flash</span>
+            </div>
 
         </div>
 
     </header>
 
-    <!-- MAIN CONTENT -->
+
+    <!-- =============================================
+         MAIN CONTENT
+    ============================================= -->
     <main class="main-content">
 
-        <!-- SEARCH BAR -->
+
+        <!-- =============================================
+             SEARCH SECTION
+             AI-styled search bar with glow on focus.
+        ============================================= -->
         <section class="search-section">
 
-            <div class="search-box">
+            <div class="search-box" id="search-box">
 
-                <!-- Search Icon -->
-                <svg class="search-icon"
-                     viewBox="0 0 24 24"
-                     fill="none"
-                     stroke="currentColor"
-                     stroke-width="2">
-
-                    <circle cx="11"
-                            cy="11"
-                            r="8">
-                    </circle>
-
-                    <line x1="21"
-                          y1="21"
-                          x2="16.65"
-                          y2="16.65">
-                    </line>
-
+                <!-- Search icon SVG -->
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
 
                 <input
                     type="text"
                     id="query"
-                    placeholder="Search a word..."
+                    placeholder="Search any word — try 'ocean' or 'resilient'..."
                     autocomplete="off"
                     spellcheck="false"
                 >
 
-                <button
-                    id="search-btn"
-                    onclick="searchWord()">
-
-                    Search
-
+                <button id="search-btn" onclick="searchWord()">
+                    <span>Search</span>
+                    <!-- Arrow icon -->
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
                 </button>
 
             </div>
 
+            <!-- Keyboard hint below search -->
+            <p class="search-hint">Press <kbd>Enter</kbd> to search</p>
+
         </section>
 
-        <!-- LOADING -->
-        <div
-            id="loading"
-            class="loading hidden">
 
-            <div class="spinner"></div>
+        <!-- =============================================
+             LOADING STATE
+        ============================================= -->
+        <div id="loading" class="loading hidden">
+            <div class="loading-inner">
+                <div class="spinner"></div>
+                <div class="loading-text">
+                    <span class="loading-label">Running algorithms</span>
+                    <span class="loading-steps" id="loading-steps">Trie → Levenshtein → FAISS → Graph BFS</span>
+                </div>
+            </div>
+        </div>
 
-            <span>
-                Thinking...
-            </span>
+
+        <!-- =============================================
+             ERROR STATE
+        ============================================= -->
+        <div id="error-message" class="error-message hidden">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Could not connect to backend — make sure FastAPI is running on port 8000.</span>
+        </div>
+
+
+        <!-- =============================================
+             EMPTY STATE (shown before first search)
+        ============================================= -->
+        <div id="empty-state" class="empty-state">
+            <div class="empty-icon">⌕</div>
+            <p class="empty-title">Enter a word to begin</p>
+            <p class="empty-sub">Powered by 7 components working in parallel</p>
+
+            <!-- Algorithm overview chips — one per major system -->
+            <div class="algo-overview">
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">🌲</span>
+                    <span>Trie Autocomplete</span>
+                </div>
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">✏️</span>
+                    <span>Levenshtein Fuzzy</span>
+                </div>
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">🔷</span>
+                    <span>FAISS Vectors</span>
+                </div>
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">🕸️</span>
+                    <span>Graph BFS</span>
+                </div>
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">📚</span>
+                    <span>Dictionary API</span>
+                </div>
+                <div class="algo-chip">
+                    <span class="algo-chip-icon">⚡</span>
+                    <span>FastAPI Backend</span>
+                </div>
+                <!-- NEW: Gemini AI chip — uses special AI highlight style -->
+                <div class="algo-chip algo-chip-ai">
+                    <span class="algo-chip-icon">🤖</span>
+                    <span>Gemini AI</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- =============================================
+             RESULTS SECTION
+             Populated dynamically by renderResults() in script.js
+        ============================================= -->
+        <section id="results" class="results-section"></section>
+
+
+        <!-- =============================================
+             SYSTEM ARCHITECTURE PANEL
+             Collapsible. Shows the full pipeline.
+        ============================================= -->
+        <div class="arch-panel" id="arch-panel">
+
+            <button class="arch-toggle" onclick="toggleArchPanel()" aria-expanded="false">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                How This Search Works
+                <svg class="arch-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+
+            <div class="arch-body" id="arch-body">
+                <div class="pipeline">
+
+                    <div class="pipe-step pipe-start">
+                        <div class="pipe-node">Q</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">User Query</span>
+                            <span class="pipe-desc">Raw text input</span>
+                        </div>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-trie">T</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Trie Traversal</span>
+                            <span class="pipe-desc">Autocomplete suggestions · O(k) lookup</span>
+                        </div>
+                        <span class="pipe-badge">Trie</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-lev">L</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Levenshtein Distance</span>
+                            <span class="pipe-desc">Typo correction · O(m×n) DP</span>
+                        </div>
+                        <span class="pipe-badge">Levenshtein</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-faiss">F</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">FAISS Vector Search</span>
+                            <span class="pipe-desc">SentenceTransformer → embedding → ANN</span>
+                        </div>
+                        <span class="pipe-badge">FAISS</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-graph">G</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Graph BFS</span>
+                            <span class="pipe-desc">99K nodes · 396K edges · BFS traversal</span>
+                        </div>
+                        <span class="pipe-badge">BFS Graph</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-dict">D</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Dictionary Layer</span>
+                            <span class="pipe-desc">Definition · Synonyms · Antonyms</span>
+                        </div>
+                        <span class="pipe-badge">Dict API</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <!-- NEW: Gemini generation node -->
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-gemini">AI</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Gemini 2.5 Flash</span>
+                            <span class="pipe-desc">Generative Layer · Context-aware explanation generation</span>
+                        </div>
+                        <span class="pipe-badge pipe-badge-ai">Gemini</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <!-- NEW: AI Explanation output node -->
+                    <div class="pipe-step">
+                        <div class="pipe-node pipe-ai-out">✦</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">AI Explanation</span>
+                            <span class="pipe-desc">Human-readable contextual explanation</span>
+                        </div>
+                        <span class="pipe-badge pipe-badge-ai">RAG Output</span>
+                    </div>
+
+                    <div class="pipe-arrow">↓</div>
+
+                    <div class="pipe-step pipe-end">
+                        <div class="pipe-node pipe-resp">R</div>
+                        <div class="pipe-info">
+                            <span class="pipe-name">Unified Response</span>
+                            <span class="pipe-desc">Merged results from all layers</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
 
         </div>
 
-        <!-- ERROR -->
-        <div
-            id="error-message"
-            class="error-message hidden">
-
-            ⚠ Could not connect to backend
-
-        </div>
-
-        <!-- RESULTS -->
-        <section
-            id="results"
-            class="results-section">
-
-        </section>
 
     </main>
 
-    <!-- FOOTER -->
+
+    <!-- =============================================
+         FOOTER
+    ============================================= -->
     <footer class="footer">
-
-        <p>
-            Built with FastAPI · FAISS · Trie · Graph Search
-        </p>
-
+        <div class="footer-inner">
+            <span class="footer-brand">Semantic Dictionary AI</span>
+            <span class="footer-sep">·</span>
+            <span>FastAPI · FAISS · Trie · Graph BFS · SentenceTransformers · Gemini 2.5 Flash</span>
+        </div>
     </footer>
+
 
     <script src="script.js"></script>
 
 </body>
-
 </html>

@@ -45,6 +45,67 @@ class GraphEngine:
                     related_words.append(neighbor)
         return related_words
     
+
+    def get_visualization_data(
+        self,
+        start_word,
+        max_depth=2
+    ):
+
+        visited = set()
+        queue = deque()
+
+        nodes = []
+        edges = []
+
+        queue.append(
+            (start_word, 0)
+        )
+
+        visited.add(start_word)
+
+        nodes.append({
+            "id": start_word,
+            "label": start_word
+        })
+
+        while queue:
+
+            current_word, depth = queue.popleft()
+
+            if depth >= max_depth:
+                continue
+
+            neighbors = self.get_synonyms(
+                current_word
+            )
+
+            for neighbor, weight in neighbors:
+
+                edges.append({
+                    "from": current_word,
+                    "to": neighbor,
+                    "weight": weight
+                })
+
+                if neighbor not in visited:
+
+                    visited.add(neighbor)
+
+                    queue.append(
+                        (neighbor, depth + 1)
+                    )
+
+                    nodes.append({
+                        "id": neighbor,
+                        "label": neighbor
+                    })
+
+        return {
+            "nodes": nodes,
+            "edges": edges
+        }
+    
     def find_path(self, start_word, end_word):
         visited = set()
         queue = deque()

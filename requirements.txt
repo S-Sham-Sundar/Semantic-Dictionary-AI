@@ -7,3 +7,5 @@ sentence-transformers
 python-Levenshtein
 scikit-learn
 torch
+google-generativeai
+python-dotenv
